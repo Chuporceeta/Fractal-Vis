@@ -5,7 +5,7 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-function draw(gl, programInfo, canvas, now) {
+function draw(gl, programInfo, canvas, t) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -26,8 +26,8 @@ function draw(gl, programInfo, canvas, now) {
 
     gl.uniform2f(programInfo.uniformLocations.dims, canvas.width, canvas.height);
 
-    const cx = 0.7885 * Math.cos(now/2000),
-        cy = 0.7885 * Math.sin(now/2000);
+    const cx = 0.7885 * Math.cos(t),
+          cy = 0.7885 * Math.sin(t);
     gl.uniform2f(programInfo.uniformLocations.c, cx, cy);
     const R = Math.ceil(0.5 + Math.sqrt(1 + 4*Math.sqrt(cx*cx + cy*cy))/2);
     gl.uniform1f( programInfo.uniformLocations.R, R);
@@ -66,10 +66,10 @@ function main() {
     }
 
     function render(now) {
-        draw(gl, programInfo, canvas, now);
+        draw(gl, programInfo, canvas, now/4000);
         requestAnimationFrame(render);
     }
-    requestAnimationFrame(render);
+    requestAnimationFrame(render)
 
 }
 main();

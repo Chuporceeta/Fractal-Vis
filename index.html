@@ -31,7 +31,7 @@
         cols[3] = vec4(1.0, 0.549, 0.0, 1.0);
         cols[4] = vec4(0.0, 0.008, 0.0, 1.0);
 
-        float x = log(150.0*iter / (1000.0 - iter));
+        float x = iter / 10.0;
         vec4 col1, col2;
         if (x < 1.0) {
             col1 = cols[0];
@@ -56,7 +56,7 @@
         vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
         for (float iter=0.0; iter < 1000.0; iter++) {
             if (z.x*z.x + z.y*z.y >= R*R) {
-                col = color(iter);
+                col = color(iter + 1.0 - log(log(z.x*z.x + z.y*z.y)) / log(2.0));
                 break;
             }
 
