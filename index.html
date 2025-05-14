@@ -7,12 +7,7 @@
 </head>
 
 <body style="margin:0; padding:0; overflow: hidden;">
-    <canvas id="gl-canvas" width="640" height="480"></canvas>
-    <script>
-        let canvas = document.getElementById("gl-canvas");
-        canvas.width = document.body.clientWidth;
-        canvas.height = window.innerHeight;
-    </script>
+    <canvas id="gl-canvas"></canvas>
 </body>
 </html>
 
@@ -25,10 +20,51 @@
 
 <script type="x-shader/x-fragment" id="fragment-shader">
     precision mediump float;
+    uniform vec2 uDims, c;
+    uniform float R;
+
+    vec4 color(float iter) {
+        vec4 cols[5];
+        cols[0] = vec4(0.0, 0.027, 0.118, 1.0);
+        cols[1] = vec4(0.125, 0.42, 0.796, 1.0);
+        cols[2] = vec4(0.929, 1.0, 1.0, 1.0);
+        cols[3] = vec4(1.0, 0.549, 0.0, 1.0);
+        cols[4] = vec4(0.0, 0.008, 0.0, 1.0);
+
+        float x = log(150.0*iter / (1000.0 - iter));
+        vec4 col1, col2;
+        if (x < 1.0) {
+            col1 = cols[0];
+            col2 = cols[1];
+        } else if (x < 2.0) {
+            col1 = cols[1];
+            col2 = cols[2];
+        } else if (x < 3.0) {
+            col1 = cols[2];
+            col2 = cols[3];
+        } else {
+            col1 = cols[3];
+            col2 = cols[4];
+        }
+
+        return mix(col1, col2, fract(x));
+    }
+
     void main() {
-        float r = gl_FragCoord.x / 500.0;
-        float g = gl_FragCoord.y / 500.0;
-        float b = (gl_FragCoord.x + gl_FragCoord.y) / 1000.0;
-        gl_FragColor = vec4(r, g, b, 1.0);
+        vec2 z = vec2(gl_FragCoord.x / uDims.x * 2.0*R - R, gl_FragCoord.y / uDims.y * 2.0*R - R);
+
+        vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
+        for (float iter=0.0; iter < 1000.0; iter++) {
+            if (z.x*z.x + z.y*z.y >= R*R) {
+                col = color(iter);
+                break;
+            }
+
+            float xtemp = z.x*z.x - z.y*z.y;
+            z.y = 2.0 * z.x * z.y + c.y;
+            z.x = xtemp + c.x;
+        }
+
+        gl_FragColor = col;
     }
 </script>
