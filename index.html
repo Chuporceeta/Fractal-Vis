@@ -8,6 +8,11 @@
 
 <body style="margin:0; padding:0; overflow: hidden;">
     <canvas id="gl-canvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gl-canvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    </script>
 </body>
 </html>
 
@@ -20,8 +25,8 @@
 
 <script type="x-shader/x-fragment" id="fragment-shader">
     precision mediump float;
-    uniform vec2 uDims, c;
-    uniform float R;
+    uniform vec2 uDims, uCenter, c;
+    uniform float R, uZoom;
 
     vec4 color(float iter) {
         vec4 cols[5];
@@ -51,7 +56,18 @@
     }
 
     void main() {
-        vec2 z = vec2(gl_FragCoord.x / uDims.x * 2.0*R - R, gl_FragCoord.y / uDims.y * 2.0*R - R);
+        vec2 z, offset;
+        if (uDims.x > uDims.y) {
+            z = vec2((gl_FragCoord.x / uDims.x * 4.0 - 2.0) * uDims.x / uDims.y,
+                      gl_FragCoord.y / uDims.y * 4.0 - 2.0);
+            offset = vec2((uCenter.x / uDims.x * 4.0 - 2.0) * uDims.x / uDims.y,
+                           uCenter.y / uDims.y * 4.0 - 2.0);
+        } else {
+            z = vec2(gl_FragCoord.x / uDims.x * 4.0 - 2.0,
+                     (gl_FragCoord.y / uDims.y * 4.0 - 2.0)) * uDims.y / uDims.x;
+        }
+        z += offset;
+        z /= uZoom;
 
         vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
         for (float iter=0.0; iter < 1000.0; iter++) {
@@ -66,5 +82,7 @@
         }
 
         gl_FragColor = col;
+
+
     }
 </script>
