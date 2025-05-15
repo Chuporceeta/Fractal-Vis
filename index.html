@@ -25,7 +25,7 @@
 
 <script type="x-shader/x-fragment" id="fragment-shader">
     precision mediump float;
-    uniform vec2 uDims, uCenter, c;
+    uniform vec2 uDims, uOffset, uZoomOffset, c;
     uniform float R, uZoom;
 
     vec4 color(float iter) {
@@ -56,18 +56,22 @@
     }
 
     void main() {
-        vec2 z, offset;
-        if (uDims.x > uDims.y) {
-            z = vec2((gl_FragCoord.x / uDims.x * 4.0 - 2.0) * uDims.x / uDims.y,
-                      gl_FragCoord.y / uDims.y * 4.0 - 2.0);
-            offset = vec2((uCenter.x / uDims.x * 4.0 - 2.0) * uDims.x / uDims.y,
-                           uCenter.y / uDims.y * 4.0 - 2.0);
-        } else {
-            z = vec2(gl_FragCoord.x / uDims.x * 4.0 - 2.0,
-                     (gl_FragCoord.y / uDims.y * 4.0 - 2.0)) * uDims.y / uDims.x;
+        vec2 z = ((gl_FragCoord.xy - uOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom;
+
+        if (length(z) < 0.01 / uZoom) {
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            return;
         }
-        z += offset;
-        z /= uZoom;
+        if (length(gl_FragCoord.xy - uDims/2.0) < 2.0) {
+            gl_FragColor = vec4(1.0, 0, 0, 1.0);
+            return;
+        }
+        for (float x=-5.0; x < 5.0; x++) {
+            if (abs(z.x-x) < 0.005 / uZoom || abs(z.y-x) < 0.005 / uZoom) {
+                gl_FragColor = vec4(0,0,0,1);
+                return;
+            }
+        }
 
         vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
         for (float iter=0.0; iter < 1000.0; iter++) {
@@ -82,6 +86,7 @@
         }
 
         gl_FragColor = col;
+
 
 
     }

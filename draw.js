@@ -25,7 +25,8 @@ function draw(gl, programInfo, canvas, t, view) {
     gl.useProgram(programInfo.program);
 
     gl.uniform1f(programInfo.uniformLocations.zoom, view.zoom);
-    gl.uniform2f(programInfo.uniformLocations.center, view.mouseX, view.mouseY);
+    gl.uniform2f(programInfo.uniformLocations.offset, view.xPanOffset, view.yPanOffset);
+    gl.uniform2f(programInfo.uniformLocations.zoomOffset, view.xZoomOffset, view.yZoomOffset);
     gl.uniform2f(programInfo.uniformLocations.dims, canvas.width, canvas.height);
 
     const cx = 0.7885 * Math.cos(t),
@@ -63,31 +64,55 @@ function main() {
         uniformLocations: {
             dims: gl.getUniformLocation(shaderProgram, "uDims"),
             zoom: gl.getUniformLocation(shaderProgram, "uZoom"),
-            center: gl.getUniformLocation(shaderProgram, "uCenter"),
+            zoomOffset: gl.getUniformLocation(shaderProgram, "uZoomOffset"),
+            offset: gl.getUniformLocation(shaderProgram, "uOffset"),
             c: gl.getUniformLocation(shaderProgram, "c"),
             R: gl.getUniformLocation(shaderProgram, "R"),
         }
-    }
+    };
 
-    let zoom = 1.0, mouseX, mouseY;
     let view = {
-        zoom: zoom,
-        mouseX: canvas.width / 2,
-        mouseY: canvas.height / 2,
-    }
+        zoom: 1.0,
+        xPanOffset: 0,
+        yPanOffset: 0,
+        xMouseOffset: 0,
+        yMouseOffset: 0,
+        xZoomOffset: 0,
+        yZoomOffset: 0,
+    };
+
+    let middleMouseDown = false;
+    document.addEventListener("mousedown", (e) => {
+        middleMouseDown = (e.button === 1);
+    });
+    document.addEventListener("mouseup", (e) => {
+        middleMouseDown = false;
+    })
     document.addEventListener("mousemove", (e) => {
-        mouseX = e.clientX;
-        mouseY = canvas.height - e.clientY;
-        // console.log(`${mouseX}/${canvas.width}, ${mouseY}/${canvas.height}`);
-    })
-    document.addEventListener("wheel", (e) => {
-        zoom = Math.max(0.01, zoom - 0.001 * e.deltaY);
-        view = {
-            zoom: zoom,
-            mouseX: mouseX,
-            mouseY: mouseY,
+        if (middleMouseDown) {
+            view.xPanOffset += e.movementX;
+            view.yPanOffset -= e.movementY;
         }
-    })
+    });
+
+    document.addEventListener("wheel", (e) => {
+        const factor = Math.pow(0.999, e.deltaY);
+
+        if (view.zoom <= 0.01 && factor < 1)
+            return;
+
+        // const biggerDim = Math.max(canvas.width, canvas.height);
+        // const toPlotSpace = (x, y) => {
+        //     return {
+        //         x: (((x - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height + view.xZoomOffset) / view.zoom,
+        //         y: (((y - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width + view.yZoomOffset) / view.zoom,
+        //     }
+        // }
+
+        view.zoom *= factor;
+    });
+
+
 
     let t = 0, paused = false;
     document.addEventListener("click", () => {paused = !paused;})
