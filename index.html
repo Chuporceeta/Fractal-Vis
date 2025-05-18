@@ -25,7 +25,7 @@
 
 <script type="x-shader/x-fragment" id="fragment-shader">
     precision mediump float;
-    uniform vec2 uDims, uOffset, uZoomOffset, c;
+    uniform vec2 uDims, uPanOffset, uZoomOffset, c;
     uniform float R, uZoom;
 
     vec4 color(float iter) {
@@ -56,22 +56,7 @@
     }
 
     void main() {
-        vec2 z = ((gl_FragCoord.xy - uOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom;
-
-        if (length(z) < 0.01 / uZoom) {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            return;
-        }
-        if (length(gl_FragCoord.xy - uDims/2.0) < 2.0) {
-            gl_FragColor = vec4(1.0, 0, 0, 1.0);
-            return;
-        }
-        for (float x=-5.0; x < 5.0; x++) {
-            if (abs(z.x-x) < 0.005 / uZoom || abs(z.y-x) < 0.005 / uZoom) {
-                gl_FragColor = vec4(0,0,0,1);
-                return;
-            }
-        }
+        vec2 z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
 
         vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
         for (float iter=0.0; iter < 1000.0; iter++) {

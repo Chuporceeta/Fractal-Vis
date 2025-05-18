@@ -25,7 +25,7 @@ function draw(gl, programInfo, canvas, t, view) {
     gl.useProgram(programInfo.program);
 
     gl.uniform1f(programInfo.uniformLocations.zoom, view.zoom);
-    gl.uniform2f(programInfo.uniformLocations.offset, view.xPanOffset, view.yPanOffset);
+    gl.uniform2f(programInfo.uniformLocations.panOffset, view.xPanOffset, view.yPanOffset);
     gl.uniform2f(programInfo.uniformLocations.zoomOffset, view.xZoomOffset, view.yZoomOffset);
     gl.uniform2f(programInfo.uniformLocations.dims, canvas.width, canvas.height);
 
@@ -65,7 +65,7 @@ function main() {
             dims: gl.getUniformLocation(shaderProgram, "uDims"),
             zoom: gl.getUniformLocation(shaderProgram, "uZoom"),
             zoomOffset: gl.getUniformLocation(shaderProgram, "uZoomOffset"),
-            offset: gl.getUniformLocation(shaderProgram, "uOffset"),
+            panOffset: gl.getUniformLocation(shaderProgram, "uPanOffset"),
             c: gl.getUniformLocation(shaderProgram, "c"),
             R: gl.getUniformLocation(shaderProgram, "R"),
         }
@@ -85,7 +85,7 @@ function main() {
     document.addEventListener("mousedown", (e) => {
         middleMouseDown = (e.button === 1);
     });
-    document.addEventListener("mouseup", (e) => {
+    document.addEventListener("mouseup", () => {
         middleMouseDown = false;
     })
     document.addEventListener("mousemove", (e) => {
@@ -101,14 +101,15 @@ function main() {
         if (view.zoom <= 0.01 && factor < 1)
             return;
 
-        // const biggerDim = Math.max(canvas.width, canvas.height);
-        // const toPlotSpace = (x, y) => {
-        //     return {
-        //         x: (((x - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height + view.xZoomOffset) / view.zoom,
-        //         y: (((y - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width + view.yZoomOffset) / view.zoom,
-        //     }
-        // }
+        const biggerDim = Math.max(canvas.width, canvas.height);
 
+        const zoomPt = {
+            x: ((e.clientX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom,
+            y: ((canvas.height - e.clientY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom,
+        }
+
+        view.xZoomOffset += zoomPt.x * (1 - 1 / factor);
+        view.yZoomOffset += zoomPt.y * (1 - 1 / factor);
         view.zoom *= factor;
     });
 
