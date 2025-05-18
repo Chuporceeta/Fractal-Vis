@@ -81,15 +81,8 @@ function main() {
         yZoomOffset: 0,
     };
 
-    let middleMouseDown = false;
-    document.addEventListener("mousedown", (e) => {
-        middleMouseDown = (e.button === 1);
-    });
-    document.addEventListener("mouseup", () => {
-        middleMouseDown = false;
-    })
     document.addEventListener("mousemove", (e) => {
-        if (middleMouseDown) {
+        if (e.buttons === 1) {
             view.xPanOffset += e.movementX;
             view.yPanOffset -= e.movementY;
         }
@@ -116,7 +109,10 @@ function main() {
 
 
     let t = 0, paused = false;
-    document.addEventListener("click", () => {paused = !paused;})
+    document.addEventListener("keydown", (e) => {
+        if (e.key === " ")
+            paused = !paused;
+    });
 
     let then = 0;
     function render(now) {
