@@ -2,7 +2,6 @@
 import {useEffect, useRef} from "react";
 import {fsSource, vsSource} from "@/shaders";
 
-
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
     if (shader) {
@@ -12,7 +11,7 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-function draw(gl, programInfo, canvas, t, view) {
+function draw(gl, programInfo, canvas, t, view, pixelToC) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -31,16 +30,19 @@ function draw(gl, programInfo, canvas, t, view) {
 
     gl.useProgram(programInfo.program);
 
+    gl.uniform1f(programInfo.uniformLocations.maxIter, 1000);
     gl.uniform1f(programInfo.uniformLocations.zoom, view.zoom);
     gl.uniform2f(programInfo.uniformLocations.panOffset, view.xPanOffset, view.yPanOffset);
     gl.uniform2f(programInfo.uniformLocations.zoomOffset, view.xZoomOffset, view.yZoomOffset);
     gl.uniform2f(programInfo.uniformLocations.dims, canvas.width, canvas.height);
 
-    const cx = 0.7885 * Math.cos(t),
-        cy = 0.7885 * Math.sin(t);
+    gl.uniform1i(programInfo.uniformLocations.pixelToC, pixelToC);
+
+    const cx = 0.7885 * Math.cos(t), cy = 0.7885 * Math.sin(t);
     gl.uniform2f(programInfo.uniformLocations.c, cx, cy);
     const R = Math.ceil(0.5 + Math.sqrt(1 + 4*Math.sqrt(cx*cx + cy*cy))/2);
     gl.uniform1f( programInfo.uniformLocations.R, 2*R);
+
 
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -73,8 +75,10 @@ export const WebGLCanvas = () => {
                 zoom: gl.getUniformLocation(shaderProgram, "uZoom"),
                 zoomOffset: gl.getUniformLocation(shaderProgram, "uZoomOffset"),
                 panOffset: gl.getUniformLocation(shaderProgram, "uPanOffset"),
-                c: gl.getUniformLocation(shaderProgram, "c"),
-                R: gl.getUniformLocation(shaderProgram, "R"),
+                maxIter: gl.getUniformLocation(shaderProgram, "uMaxIter"),
+                c: gl.getUniformLocation(shaderProgram, "uC"),
+                R: gl.getUniformLocation(shaderProgram, "uR"),
+                pixelToC: gl.getUniformLocation(shaderProgram, "uPixelToC"),
             }
         };
 
@@ -82,8 +86,6 @@ export const WebGLCanvas = () => {
             zoom: 1.0,
             xPanOffset: 0,
             yPanOffset: 0,
-            xMouseOffset: 0,
-            yMouseOffset: 0,
             xZoomOffset: 0,
             yZoomOffset: 0,
         };
@@ -119,11 +121,12 @@ export const WebGLCanvas = () => {
                 paused = !paused;
         });
 
-        let then = 0;        function render(now) {
+        let then = 0;
+        function render(now) {
             if (!paused)
                 t += now - then;
             then = now;
-            draw(gl, programInfo, canvas, t/4000, view);
+            draw(gl, programInfo, canvas, t/4000, view, true);
             requestAnimationFrame(render);
         }
         requestAnimationFrame(render)

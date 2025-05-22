@@ -1,4 +1,4 @@
-import {WebGLCanvas} from "@/app/WebGLCanvas";
+import {WebGLCanvas} from "@/app/components/WebGLCanvas";
 
 export default function Home() {
   return (

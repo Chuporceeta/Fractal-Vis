@@ -7,35 +7,9 @@ export const vsSource = `
 
 export const fsSource = `
     precision highp float;
-    uniform vec2 uDims, uPanOffset, uZoomOffset, c;
-    uniform float R, uZoom;
-
-    vec4 color(float mu) {
-        vec4 cols[5];
-        cols[0] = vec4(0.0, 0.05, 0.15, 1.0);
-        cols[1] = vec4(0.1, 0.5, 0.8, 1.0);
-        cols[2] = vec4(0.9, 1.0, 0.9, 1.0);
-        cols[3] = vec4(1.0, 0.6, 0.0, 1.0);
-        cols[4] = vec4(0.1, 0.1, 0.1, 1.0);
-
-        float x = mod(mu, 50.0) / 10.0;
-        vec4 col1, col2;
-        if (x < 1.0) {
-            col1 = cols[0];
-            col2 = cols[1];
-        } else if (x < 2.0) {
-            col1 = cols[1];
-            col2 = cols[2];
-        } else if (x < 3.0) {
-            col1 = cols[2];
-            col2 = cols[3];
-        } else {
-            col1 = cols[3];
-            col2 = cols[4];
-        }
-
-        return mix(col1, col2, fract(x));
-    }
+    uniform vec2 uDims, uPanOffset, uZoomOffset, uC;
+    uniform float uR, uZoom, uMaxIter;
+    uniform bool uPixelToC;
 
     // https://github.com/Rachmanin0xFF/GLSL-Color-Functions/blob/main/color-functions.glsl
     const vec3 D65_WHITE = vec3(0.95045592705, 1.0, 1.08905775076);
@@ -82,25 +56,63 @@ export const fsSource = `
     vec3 XYZ_TO_SRGB(vec3 xyz)  { return RGB_TO_SRGB(XYZ_TO_RGB(xyz));  }
     vec3 LAB_TO_SRGB(vec3 lab)  { return XYZ_TO_RGB(LAB_TO_XYZ(lab));  }
     vec3 LCH_TO_SRGB(vec3 lch)  { return LAB_TO_SRGB(LCH_TO_LAB(lch));  }
+    
+    
+        vec4 color(float mu) {
+        vec4 cols[5];
+        cols[0] = vec4(0.0, 0.05, 0.15, 1.0);
+        cols[1] = vec4(0.1, 0.5, 0.8, 1.0);
+        cols[2] = vec4(0.9, 1.0, 0.9, 1.0);
+        cols[3] = vec4(1.0, 0.6, 0.0, 1.0);
+        cols[4] = vec4(0.1, 0.1, 0.1, 1.0);
+
+        float x = mod(mu, 50.0) / 10.0;
+        vec4 col1, col2;
+        if (x < 1.0) {
+            col1 = cols[0];
+            col2 = cols[1];
+        } else if (x < 2.0) {
+            col1 = cols[1];
+            col2 = cols[2];
+        } else if (x < 3.0) {
+            col1 = cols[2];
+            col2 = cols[3];
+        } else {
+            col1 = cols[3];
+            col2 = cols[4];
+        }
+
+        return mix(col1, col2, fract(x));
+    }
+    
+    vec4 colorLCH(float iter) {
+        float s = pow(iter / uMaxIter, 1.0);
+        float v = 1.0 - pow(cos(3.14159265359 * s), 2.0);
+        vec3 LCH = vec3(
+            75.0 - 75.0 * v,
+            103.0 - 75.0 * v,
+            mod(pow(360.0 * s, 1.5), 360.0)
+        );
+        return vec4(LCH_TO_SRGB(LCH), 1.0);
+    }
 
     void main() {
-        vec2 z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
-
-        float maxIter = 1000.0, paletteSize = 50.0;
-        vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
-        for (float iter=0.0; iter < 1000.0; iter++) {
-            if (z.x*z.x + z.y*z.y >= R*R) {
-
-                float s = pow(iter / maxIter, 1.0);
-                float v = 1.0 - pow(cos(3.14159265359 * s), 2.0);
-                vec3 LCH = vec3(
-                    75.0 - 75.0 * v,
-                    103.0 - 75.0 * v,
-                    mod(pow(360.0 * s, 1.5), 360.0)
-                );
-                col = vec4(LCH_TO_SRGB(LCH), 1.0);
-
-                col = color(iter + 1.0 - log(log(z.x*z.x + z.y*z.y)) / log(2.0));
+        vec2 z, c;
+        if (uPixelToC) {
+            z = vec2(0, 0);
+            c = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
+        } else {
+            z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
+            c = uC;
+        }
+    
+        for (float iter=0.0; iter < 10000.0; iter++) {
+            if (iter == uMaxIter) {
+                gl_FragColor = vec4(0, 0, 0, 1);
+                break;
+            }
+            if (z.x*z.x + z.y*z.y >= uR*uR) {
+                gl_FragColor = color(iter + 1.0 - log(log(z.x*z.x + z.y*z.y)) / log(2.0));
                 break;
             }
 
@@ -108,7 +120,5 @@ export const fsSource = `
             z.y = 2.0 * z.x * z.y + c.y;
             z.x = xtemp + c.x;
         }
-
-        gl_FragColor = col;
     }
 `;
