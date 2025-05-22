@@ -1,29 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Julia Set Visualization</title>
-    <script src="draw.js" type="module"></script>
-</head>
-
-<body style="margin:0; padding:0; overflow: hidden;">
-    <canvas id="gl-canvas"></canvas>
-    <script>
-        const canvas = document.getElementById("gl-canvas");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    </script>
-</body>
-</html>
-
-<script type="x-shader/x-vertex" id="vertex-shader">
+export const vsSource = `
     attribute vec4 aVertexPosition;
     void main() {
         gl_Position = aVertexPosition;
     }
-</script>
+`;
 
-<script type="x-shader/x-fragment" id="fragment-shader">
+export const fsSource = `
     precision highp float;
     uniform vec2 uDims, uPanOffset, uZoomOffset, c;
     uniform float R, uZoom;
@@ -128,8 +110,5 @@
         }
 
         gl_FragColor = col;
-
-
-
     }
-</script>
+`;
