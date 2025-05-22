@@ -95,7 +95,23 @@ export const fsSource = `
         );
         return vec4(LCH_TO_SRGB(LCH), 1.0);
     }
+    
 
+    float cosh(float x) {return (exp(x) + 1.0/exp(x)) / 2.0;}
+    float sinh(float x) {return (exp(x) - 1.0/exp(x)) / 2.0;}
+    vec2 cosh(vec2 z) {return vec2(cosh(z.x) * cos(z.y), sinh(z.x) * sin(z.y));}
+    vec2 sinh(vec2 z) {return vec2(sinh(z.x) * cos(z.y), cosh(z.x) * sin(z.y));}
+    vec2 clog(vec2 z) {return vec2(log(length(z)), atan(z.y, z.x));}
+    vec2 cexp(vec2 z) {return exp(z.x) * vec2(cos(z.y), sin(z.y));}
+    vec2 ccos(vec2 z) {return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));}
+    vec2 csin(vec2 z) {return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));}
+    vec2 mul(vec2 a, vec2 b) {return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);}
+    vec2 pow(vec2 z, int n) {
+        float a = pow(z.x*z.x + z.y*z.y, float(n)/2.0);
+        float b = float(n) * atan(z.y, z.x);
+        return a * vec2(cos(b), sin(b));
+    }
+    
     void main() {
         vec2 z, c;
         if (uPixelToC) {
@@ -107,18 +123,17 @@ export const fsSource = `
         }
     
         for (float iter=0.0; iter < 10000.0; iter++) {
-            if (iter == uMaxIter) {
+            if (iter >= uMaxIter) {
                 gl_FragColor = vec4(0, 0, 0, 1);
                 break;
             }
             if (z.x*z.x + z.y*z.y >= uR*uR) {
                 gl_FragColor = color(iter + 1.0 - log(log(z.x*z.x + z.y*z.y)) / log(2.0));
+                //gl_FragColor = colorLCH(iter);
                 break;
             }
 
-            float xtemp = z.x*z.x - z.y*z.y;
-            z.y = 2.0 * z.x * z.y + c.y;
-            z.x = xtemp + c.x;
+            z = pow(mul(sinh(z), sinh(z)) + cos(z), 5) + pow(z, 2) + c;
         }
     }
 `;
