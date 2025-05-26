@@ -11,11 +11,10 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-function draw(gl, programInfo, canvas, t, view, pixelToC) {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+function draw(gl, programInfo, canvas, view, settings) {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
-
 
     const posBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
@@ -27,23 +26,19 @@ function draw(gl, programInfo, canvas, t, view, pixelToC) {
     gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
-
     gl.useProgram(programInfo.program);
-
-    gl.uniform1f(programInfo.uniformLocations.maxIter, 1000);
     gl.uniform1f(programInfo.uniformLocations.zoom, view.zoom);
     gl.uniform2f(programInfo.uniformLocations.panOffset, view.xPanOffset, view.yPanOffset);
     gl.uniform2f(programInfo.uniformLocations.zoomOffset, view.xZoomOffset, view.yZoomOffset);
     gl.uniform2f(programInfo.uniformLocations.dims, canvas.width, canvas.height);
 
-    gl.uniform1i(programInfo.uniformLocations.pixelToC, pixelToC);
+    gl.uniform1f(programInfo.uniformLocations.maxIter, settings.maxIter);
+    gl.uniform2f(programInfo.uniformLocations.flip, settings.xFlip, settings.yFlip);
+    gl.uniform1i(programInfo.uniformLocations.pixelToC, settings.pixelToC);
 
-    const cx = 0.7885 * Math.cos(t), cy = 0.7885 * Math.sin(t);
+    const cx = 0.7885 * Math.cos(settings.t), cy = 0.7885 * Math.sin(settings.t);
     gl.uniform2f(programInfo.uniformLocations.c, cx, cy);
-    const R = Math.ceil(0.5 + Math.sqrt(1 + 4*Math.sqrt(cx*cx + cy*cy))/2);
-    gl.uniform1f( programInfo.uniformLocations.R, 2*R);
-
-
+    gl.uniform1f(programInfo.uniformLocations.R, settings.rad);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -51,7 +46,21 @@ function draw(gl, programInfo, canvas, t, view, pixelToC) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-export const WebGLCanvas = () => {
+
+export const WebGLCanvas = ({
+    initialState = {
+        preview: false,
+        view: {
+            zoom: 1.0,
+            xPanOffset: 0,
+            yPanOffset: 0,
+            xZoomOffset: 0,
+            yZoomOffset: 0,
+        },
+    },
+    settingsRef,
+    updateSetting,
+}) => {
     const canvasRef = useRef(null);
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -75,29 +84,24 @@ export const WebGLCanvas = () => {
                 zoom: gl.getUniformLocation(shaderProgram, "uZoom"),
                 zoomOffset: gl.getUniformLocation(shaderProgram, "uZoomOffset"),
                 panOffset: gl.getUniformLocation(shaderProgram, "uPanOffset"),
+                flip: gl.getUniformLocation(shaderProgram, "uFlip"),
                 maxIter: gl.getUniformLocation(shaderProgram, "uMaxIter"),
                 c: gl.getUniformLocation(shaderProgram, "uC"),
                 R: gl.getUniformLocation(shaderProgram, "uR"),
                 pixelToC: gl.getUniformLocation(shaderProgram, "uPixelToC"),
+                iterFunc: gl.getUniformLocation(shaderProgram, "uIterFunc"),
             }
         };
 
-        let view = {
-            zoom: 1.0,
-            xPanOffset: 0,
-            yPanOffset: 0,
-            xZoomOffset: 0,
-            yZoomOffset: 0,
-        };
-
-        document.addEventListener("mousemove", (e) => {
+        let view = initialState.view;
+        canvas.addEventListener("mousemove", (e) => {
             if (e.buttons === 1) {
                 view.xPanOffset += e.movementX;
                 view.yPanOffset -= e.movementY;
             }
         });
 
-        document.addEventListener("wheel", (e) => {
+        canvas.addEventListener("wheel", (e) => {
             const factor = Math.pow(0.999, e.deltaY);
 
             if (view.zoom <= 0.01 && factor < 1)
@@ -106,8 +110,8 @@ export const WebGLCanvas = () => {
             const biggerDim = Math.max(canvas.width, canvas.height);
 
             const zoomPt = {
-                x: ((e.clientX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom,
-                y: ((canvas.height - e.clientY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom,
+                x: ((e.offsetX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom,
+                y: ((canvas.height - e.offsetY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom,
             }
 
             view.xZoomOffset += zoomPt.x * (1 - 1 / factor);
@@ -115,18 +119,20 @@ export const WebGLCanvas = () => {
             view.zoom *= factor;
         });
 
-        let t = 0, paused = false;
         document.addEventListener("keydown", (e) => {
-            if (e.key === " ")
-                paused = !paused;
+            if (e.key === " ") {
+                e.preventDefault();
+                updateSetting("paused", !settingsRef.current.paused);
+            }
         });
 
         let then = 0;
         function render(now) {
-            if (!paused)
-                t += now - then;
+            const settings = settingsRef.current;
+            if (!settings.paused)
+                updateSetting("t", (settings.t + (now - then) / 100 * settings.animSpeed) % settings.tLoop);
             then = now;
-            draw(gl, programInfo, canvas, t/4000, view, true);
+            draw(gl, programInfo, canvas, view, settings);
             requestAnimationFrame(render);
         }
         requestAnimationFrame(render)

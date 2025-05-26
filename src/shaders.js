@@ -6,10 +6,12 @@ export const vsSource = `
 `;
 
 export const fsSource = `
+    precision lowp int;
     precision highp float;
-    uniform vec2 uDims, uPanOffset, uZoomOffset, uC;
+    uniform vec2 uDims, uPanOffset, uZoomOffset, uC, uFlip;
     uniform float uR, uZoom, uMaxIter;
     uniform bool uPixelToC;
+    uniform int uIterFunc[100];
 
     // https://github.com/Rachmanin0xFF/GLSL-Color-Functions/blob/main/color-functions.glsl
     const vec3 D65_WHITE = vec3(0.95045592705, 1.0, 1.08905775076);
@@ -99,17 +101,23 @@ export const fsSource = `
 
     float cosh(float x) {return (exp(x) + 1.0/exp(x)) / 2.0;}
     float sinh(float x) {return (exp(x) - 1.0/exp(x)) / 2.0;}
-    vec2 cosh(vec2 z) {return vec2(cosh(z.x) * cos(z.y), sinh(z.x) * sin(z.y));}
-    vec2 sinh(vec2 z) {return vec2(sinh(z.x) * cos(z.y), cosh(z.x) * sin(z.y));}
-    vec2 clog(vec2 z) {return vec2(log(length(z)), atan(z.y, z.x));}
-    vec2 cexp(vec2 z) {return exp(z.x) * vec2(cos(z.y), sin(z.y));}
-    vec2 ccos(vec2 z) {return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));}
-    vec2 csin(vec2 z) {return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));}
-    vec2 mul(vec2 a, vec2 b) {return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);}
-    vec2 pow(vec2 z, int n) {
+    vec2 cosh(vec2 z) {return vec2(cosh(z.x) * cos(z.y), sinh(z.x) * sin(z.y));}    // 1
+    vec2 sinh(vec2 z) {return vec2(sinh(z.x) * cos(z.y), cosh(z.x) * sin(z.y));}    // 2
+    vec2 clog(vec2 z) {return vec2(log(length(z)), atan(z.y, z.x));}                // 3
+    vec2 cexp(vec2 z) {return exp(z.x) * vec2(cos(z.y), sin(z.y));}                 // 4
+    vec2 ccos(vec2 z) {return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));}   // 5
+    vec2 csin(vec2 z) {return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));}    // 6
+    vec2 mul(vec2 a, vec2 b) {return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);}   // 7
+                                                                                    // 8 = plus
+                                                                                    // 9 = negate
+    vec2 pow(vec2 z, int n) {                                                       // 10 + n
         float a = pow(z.x*z.x + z.y*z.y, float(n)/2.0);
         float b = float(n) * atan(z.y, z.x);
         return a * vec2(cos(b), sin(b));
+    }
+    
+    vec2 apply(vec2 z) {
+        return z;
     }
     
     void main() {
@@ -117,9 +125,11 @@ export const fsSource = `
         if (uPixelToC) {
             z = vec2(0, 0);
             c = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
+            c *= uFlip;
         } else {
             z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
             c = uC;
+            z *= uFlip;
         }
     
         for (float iter=0.0; iter < 10000.0; iter++) {
@@ -133,7 +143,7 @@ export const fsSource = `
                 break;
             }
 
-            z = pow(mul(sinh(z), sinh(z)) + cos(z), 5) + pow(z, 2) + c;
+            z = pow(z, 2) + c;
         }
     }
 `;
