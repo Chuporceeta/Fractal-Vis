@@ -4,10 +4,14 @@ import {fsSource, vsSource} from "@/shaders";
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
-    if (shader) {
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader);
+        return null;
     }
+
     return shader;
 }
 
@@ -46,7 +50,6 @@ function draw(gl, programInfo, canvas, view, settings) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-
 export const WebGLCanvas = ({
     initialState = {
         preview: false,
@@ -58,23 +61,29 @@ export const WebGLCanvas = ({
             yZoomOffset: 0,
         },
     },
-    settingsRef,
-    updateSetting,
+    stateRef,
+    updateState,
 }) => {
     const canvasRef = useRef(null);
+    const programInfoRef = useRef(null);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const gl = canvas.getContext("webgl");
 
         const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-        const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource(stateRef.current.iterFunc));
+        if (fragmentShader === null)
+            return;
+
+        gl.deleteProgram(programInfoRef.current?.program);
 
         const shaderProgram = gl.createProgram();
         gl.attachShader(shaderProgram, vertexShader);
         gl.attachShader(shaderProgram, fragmentShader);
         gl.linkProgram(shaderProgram);
 
-        const programInfo = {
+        programInfoRef.current = {
             program: shaderProgram,
             attribLocations: {
                 vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
@@ -89,9 +98,13 @@ export const WebGLCanvas = ({
                 c: gl.getUniformLocation(shaderProgram, "uC"),
                 R: gl.getUniformLocation(shaderProgram, "uR"),
                 pixelToC: gl.getUniformLocation(shaderProgram, "uPixelToC"),
-                iterFunc: gl.getUniformLocation(shaderProgram, "uIterFunc"),
             }
         };
+    }, [stateRef.current.iterFunc]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const gl = canvas.getContext("webgl");
 
         let view = initialState.view;
         canvas.addEventListener("mousemove", (e) => {
@@ -120,23 +133,24 @@ export const WebGLCanvas = ({
         });
 
         document.addEventListener("keydown", (e) => {
-            if (e.key === " ") {
+            if (e.key === "Enter") {
                 e.preventDefault();
-                updateSetting("paused", !settingsRef.current.paused);
+                updateState("paused", !stateRef.current.paused);
             }
         });
 
         let then = 0;
         function render(now) {
-            const settings = settingsRef.current;
-            if (!settings.paused)
-                updateSetting("t", (settings.t + (now - then) / 100 * settings.animSpeed) % settings.tLoop);
+            const state = stateRef.current;
+            if (!state.paused)
+                updateState("t", (state.t + (now - then) / 100 * state.animSpeed) % state.tLoop);
             then = now;
-            draw(gl, programInfo, canvas, view, settings);
+
+            draw(gl, programInfoRef.current, canvas, view, state);
             requestAnimationFrame(render);
         }
-        requestAnimationFrame(render)
-
+        requestAnimationFrame(render);
     }, []);
+
     return <canvas ref={canvasRef} />;
 }
