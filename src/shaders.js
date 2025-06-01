@@ -9,7 +9,7 @@ export const fsSource = (iterFunc) => `
     precision highp float;
     uniform vec2 uDims, uPanOffset, uZoomOffset, uC, uFlip;
     uniform float uR, uZoom, uMaxIter;
-    uniform bool uPixelToC;
+    uniform bool uPixelToC, uGrid;
 
     // https://github.com/Rachmanin0xFF/GLSL-Color-Functions/blob/main/color-functions.glsl
     const vec3 D65_WHITE = vec3(0.95045592705, 1.0, 1.08905775076);
@@ -123,6 +123,14 @@ export const fsSource = (iterFunc) => `
             z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
             c = uC;
             z *= uFlip;
+        }
+        
+        if (uGrid) {
+            vec2 v = uPixelToC ? c : z;
+            if (fract(v.x) < 0.01/uZoom || fract(v.y) < 0.01/uZoom) {
+                gl_FragColor = vec4(0, 0, 0, 1);
+                return;
+            }
         }
     
         for (float iter=0.0; iter < 10000.0; iter++) {

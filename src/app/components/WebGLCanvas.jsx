@@ -20,6 +20,10 @@ function draw(gl, programInfo, canvas, view, settings) {
     canvas.height = canvas.parentElement.clientHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
 
+    const match = settings.cFunc.match(/^(-?\d+(?:\.\d+)?) ?([+-] ?\d+(?:\.\d+)?)i$|^(-?\d+(?:\.\d+)?)?\*?cis\(?t\)?$/);
+    if (match === null)
+        return;
+
     const posBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
     gl.bufferData(
@@ -38,9 +42,19 @@ function draw(gl, programInfo, canvas, view, settings) {
 
     gl.uniform1f(programInfo.uniformLocations.maxIter, settings.maxIter);
     gl.uniform2f(programInfo.uniformLocations.flip, settings.xFlip, settings.yFlip);
+    gl.uniform1i(programInfo.uniformLocations.grid, settings.grid);
     gl.uniform1i(programInfo.uniformLocations.pixelToC, settings.pixelToC);
 
-    const cx = 0.7885 * Math.cos(settings.t), cy = 0.7885 * Math.sin(settings.t);
+    let cx, cy;
+    if (match[1] === undefined && match[2] === undefined) {
+        const a = parseFloat(match[3]) || 1;
+        cx = a * Math.cos(settings.t);
+        cy = a * Math.sin(settings.t);
+    } else {
+        cx = parseFloat(match[1]);
+        cy = parseFloat(match[2].replaceAll(' ',''));
+    }
+    console.log(cx, cy);
     gl.uniform2f(programInfo.uniformLocations.c, cx, cy);
     gl.uniform1f(programInfo.uniformLocations.R, settings.rad);
 
@@ -98,6 +112,7 @@ export const WebGLCanvas = ({
                 c: gl.getUniformLocation(shaderProgram, "uC"),
                 R: gl.getUniformLocation(shaderProgram, "uR"),
                 pixelToC: gl.getUniformLocation(shaderProgram, "uPixelToC"),
+                grid: gl.getUniformLocation(shaderProgram, "uGrid"),
             }
         };
     }, [stateRef.current.iterFunc]);
@@ -108,11 +123,23 @@ export const WebGLCanvas = ({
 
         let view = initialState.view;
         canvas.addEventListener("mousemove", (e) => {
-            if (e.buttons === 1) {
+            if (e.buttons === 1 || e.buttons === 4) {
                 view.xPanOffset += e.movementX;
                 view.yPanOffset -= e.movementY;
             }
+            if (stateRef.current.mouseC) {
+                const biggerDim = Math.max(canvas.width, canvas.height);
+                const cx = ((e.offsetX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom + view.xZoomOffset;
+                const cy = ((canvas.height - e.offsetY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom + view.yZoomOffset;
+                updateState("cFunc", `${cx.toFixed(4)} ${cy<0 ? '-':'+'} ${Math.abs(cy).toFixed(4)}i`);
+            }
         });
+
+        canvas.addEventListener("click", (e) => {
+            if (stateRef.current.mouseC) {
+                updateState("mouseC", false);
+            }
+        })
 
         canvas.addEventListener("wheel", (e) => {
             const factor = Math.pow(0.999, e.deltaY);

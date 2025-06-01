@@ -9,7 +9,14 @@ export const Tooltip = ({info}) => {
         iterFunc:
 `The complex function that is repeatedly iterated on z.
 Please enter an expression in z composed only of the following functions:
-cos, sin, cosh, sinh, exp, log, pow, mul, div.`
+cos, sin, cosh, sinh, exp, log, abs, pow, mul, div.`,
+        constant:
+`The constant term of the iterated function.
+Please enter either a complex number in the
+form a+bi or an expression of the form a*cis(t).
+Alternatively, click on the cursor icon to control
+the value using the mouse cursor. Clicking on
+the canvas will fix the value to that position.`,
     }[info];
 
     return (

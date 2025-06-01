@@ -6,7 +6,7 @@ import {TimeSlider} from "@/app/components/TimeSlider";
 
 export default function Home() {
   const [state, setState] = useState({
-    maxIter: 500,
+    maxIter: 100,
     rad: 2,
     t: 0,
     tLoop: 6.28,
@@ -15,9 +15,11 @@ export default function Home() {
     pixelToC: true,
     iterFunc: "pow(z, 2)",
     funcInput: "pow(z, 2)",
-    cFunc: "0.7885·cis(t)",
+    cFunc: "0.7885*cis(t)",
+    mouseC: false,
     xFlip: 1,
     yFlip: 1,
+    grid: false,
   });
   const stateRef = useRef(state);
 
@@ -31,7 +33,7 @@ export default function Home() {
         <Sidebar state={state} updateState={updateState} />
         <div className="flex-1 min-w-0 relative">
           <WebGLCanvas stateRef={stateRef} updateState={updateState} />
-          {state.pixelToC ? null : <TimeSlider state={state} updateState={updateState} />}
+          {state.pixelToC || state.cFunc.slice(-6) !== "cis(t)" ? null : <TimeSlider state={state} updateState={updateState} />}
         </div>
       </div>
 

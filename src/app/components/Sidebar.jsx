@@ -41,6 +41,8 @@ export const Sidebar = ({state, updateState}) => {
                 <label className="text-sm font-medium mb-1">Max Iteration Number</label>
                 <input
                     type="number"
+                    min={1}
+                    max={10000}
                     value={state.maxIter}
                     onChange={(e) => updateState("maxIter", Number(e.target.value))}
                     className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -65,9 +67,7 @@ export const Sidebar = ({state, updateState}) => {
                 <div className="flex items-center justify-between">
                     <span className="text-lg font-math italic">z </span> (Julia)
                     <button
-                        onClick={() => {
-                            updateState("pixelToC", !state.pixelToC);
-                        }}
+                        onClick={() => updateState("pixelToC", !state.pixelToC)}
                         className={"w-12 h-6 flex items-center rounded-full p-1 duration-300 ease-in-out bg-blue-500"}
                     >
                         <div
@@ -84,15 +84,34 @@ export const Sidebar = ({state, updateState}) => {
             {/* Constant Term */}
             {state.pixelToC ? null :
                 <div className="flex flex-col">
-                    <label className="text-sm font-medium mb-1">"Constant" Term</label>
-                    <div className="flex items-center gap-2">
-                        <span className="font-math"> c(t) = </span>
-                        <input
-                            type="text"
-                            value={state.cFunc}
-                            onChange={(e) => updateState("cFunc", e.target.value)}
-                            className="font-math focus:outline-none max-w-32"
-                        />
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium mb-1">"Constant" Term</label>
+                        <Tooltip info='constant'/>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="font-math"> c(t) = </span>
+                            <input
+                                type="text"
+                                value={state.cFunc}
+                                onChange={(e) => updateState("cFunc", e.target.value)}
+                                className="font-math focus:outline-none max-w-32 border-b"
+                            />
+                        </div>
+
+                       <button
+                           onClick={() => updateState("mouseC", !state.mouseC)}
+                       >
+                           {state.mouseC ?
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5">
+                                   <path fill="currentColor" fillRule="evenodd" d="M4.38 3.075a1 1 0 0 0-1.305 1.306l7 17a1 1 0 0 0 1.844.013l2.685-6.265a1 1 0 0 1 .525-.525l6.265-2.685a1 1 0 0 0-.013-1.844z" clipRule="evenodd" />
+                               </svg> :
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5">
+                                   <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 21L4 4l17 7l-6.265 2.685a2 2 0 0 0-1.05 1.05z" />
+                               </svg>
+                           }
+                       </button>
+
                     </div>
                 </div>
             }
@@ -114,6 +133,14 @@ export const Sidebar = ({state, updateState}) => {
                         type="checkbox"
                         value={state.yFlip}
                         onChange={() => updateState("yFlip", -state.yFlip)}
+                    />
+                </div>
+                <div className="flex items-center justify-between">
+                    Show Grid
+                    <input
+                        type="checkbox"
+                        value={state.grid}
+                        onChange={() => updateState("grid", !state.grid)}
                     />
                 </div>
             </div>
