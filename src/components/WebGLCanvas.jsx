@@ -135,7 +135,7 @@ export const WebGLCanvas = ({
             }
         });
 
-        canvas.addEventListener("click", (e) => {
+        canvas.addEventListener("click", () => {
             if (stateRef.current.mouseC) {
                 updateState("mouseC", false);
             }
@@ -174,6 +174,17 @@ export const WebGLCanvas = ({
             then = now;
 
             draw(gl, programInfoRef.current, canvas, view, state);
+
+            if (state.download) {
+                updateState("download", false);
+                const img = canvas.toDataURL("image/png");
+                const aDLLink = document.createElement("a");
+                aDLLink.download = "Fractal.png"
+                aDLLink.href = img;
+                aDLLink.click();
+                aDLLink.remove();
+            }
+
             requestAnimationFrame(render);
         }
         requestAnimationFrame(render);

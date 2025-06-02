@@ -1,5 +1,5 @@
 import React from "react";
-import {Tooltip} from "@/app/components/Tooltip";
+import {Tooltip} from "@/components/Tooltip";
 
 function handleFuncInput(func, updateState) {
     updateState("funcInput", func);
