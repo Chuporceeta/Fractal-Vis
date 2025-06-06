@@ -1,5 +1,6 @@
 import React from "react";
 import {Info} from "@/components/Info";
+import {iCursorFilled, iCursorOutline} from "@/components/icons";
 
 function handleFuncInput(func, updateState) {
     updateState("funcInput", func);
@@ -98,19 +99,9 @@ export const Sidebar = ({state, updateState}) => {
                             />
                         </div>
 
-                       <button
-                           onClick={() => updateState("mouseC", !state.mouseC)}
-                       >
-                           {state.mouseC ?
-                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5">
-                                   <path fill="currentColor" fillRule="evenodd" d="M4.38 3.075a1 1 0 0 0-1.305 1.306l7 17a1 1 0 0 0 1.844.013l2.685-6.265a1 1 0 0 1 .525-.525l6.265-2.685a1 1 0 0 0-.013-1.844z" clipRule="evenodd" />
-                               </svg> :
-                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5">
-                                   <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 21L4 4l17 7l-6.265 2.685a2 2 0 0 0-1.05 1.05z" />
-                               </svg>
-                           }
+                       <button onClick={() => updateState("mouseC", !state.mouseC)}>
+                           { state.mouseC ? iCursorFilled : iCursorOutline }
                        </button>
-
                     </div>
                 </div>
             }
