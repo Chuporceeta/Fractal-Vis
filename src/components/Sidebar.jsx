@@ -1,5 +1,5 @@
 import React from "react";
-import {Tooltip} from "@/components/Tooltip";
+import {Info} from "@/components/Info";
 
 function handleFuncInput(func, updateState) {
     updateState("funcInput", func);
@@ -9,7 +9,6 @@ function handleFuncInput(func, updateState) {
                .replaceAll('exp', 'cexp')
                .replaceAll('log', 'clog');
 
-    console.log(func);
     updateState("iterFunc", func);
 }
 
@@ -22,7 +21,7 @@ export const Sidebar = ({state, updateState}) => {
             <div className="flex flex-col">
                 <div className="flex items-center justify-between">
                     <label className="text-sm font-medium mb-1">Iterated Function</label>
-                    <Tooltip info='iterFunc'/>
+                    <Info info='iterFunc'/>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="font-math"> f(z) = </span>
@@ -86,7 +85,7 @@ export const Sidebar = ({state, updateState}) => {
                 <div className="flex flex-col">
                     <div className="flex items-center justify-between">
                         <label className="text-sm font-medium mb-1">"Constant" Term</label>
-                        <Tooltip info='constant'/>
+                        <Info info='constant'/>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

@@ -54,7 +54,6 @@ function draw(gl, programInfo, canvas, view, settings) {
         cx = parseFloat(match[1]);
         cy = parseFloat(match[2].replaceAll(' ',''));
     }
-    console.log(cx, cy);
     gl.uniform2f(programInfo.uniformLocations.c, cx, cy);
     gl.uniform1f(programInfo.uniformLocations.R, settings.rad);
 
@@ -65,18 +64,15 @@ function draw(gl, programInfo, canvas, view, settings) {
 }
 
 export const WebGLCanvas = ({
-    initialState = {
-        preview: false,
-        view: {
-            zoom: 1.0,
-            xPanOffset: 0,
-            yPanOffset: 0,
-            xZoomOffset: 0,
-            yZoomOffset: 0,
-        },
+    view = {
+        zoom: 1.0,
+        xPanOffset: 0,
+        yPanOffset: 0,
+        xZoomOffset: 0,
+        yZoomOffset: 0,
     },
     stateRef,
-    updateState,
+    updateState = null,
 }) => {
     const canvasRef = useRef(null);
     const programInfoRef = useRef(null);
@@ -117,11 +113,27 @@ export const WebGLCanvas = ({
         };
     }, [stateRef.current.iterFunc]);
 
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const gl = canvas.getContext("webgl");
 
-        let view = initialState.view;
+        if (!updateState) {
+            draw(gl, programInfoRef.current, canvas, view, stateRef.current);
+            return;
+        }
+
+        canvas.addEventListener("keydown", (e) => {
+            if (e.key === " ") {
+                e.preventDefault();
+                updateState("paused", !stateRef.current.paused);
+            }
+        });
+        canvas.addEventListener("click", () => {
+            if (stateRef.current.mouseC) {
+                updateState("mouseC", false);
+            }
+        })
         canvas.addEventListener("mousemove", (e) => {
             if (e.buttons === 1 || e.buttons === 4) {
                 view.xPanOffset += e.movementX;
@@ -134,13 +146,6 @@ export const WebGLCanvas = ({
                 updateState("cFunc", `${cx.toFixed(4)} ${cy<0 ? '-':'+'} ${Math.abs(cy).toFixed(4)}i`);
             }
         });
-
-        canvas.addEventListener("click", () => {
-            if (stateRef.current.mouseC) {
-                updateState("mouseC", false);
-            }
-        })
-
         canvas.addEventListener("wheel", (e) => {
             const factor = Math.pow(0.999, e.deltaY);
 
@@ -159,15 +164,8 @@ export const WebGLCanvas = ({
             view.zoom *= factor;
         });
 
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                updateState("paused", !stateRef.current.paused);
-            }
-        });
-
         let then = 0;
-        function render(now) {
+        const render = now => {
             const state = stateRef.current;
             if (!state.paused)
                 updateState("t", (state.t + (now - then) / 100 * state.animSpeed) % state.tLoop);
@@ -179,16 +177,19 @@ export const WebGLCanvas = ({
                 updateState("download", false);
                 const img = canvas.toDataURL("image/png");
                 const aDLLink = document.createElement("a");
-                aDLLink.download = "Fractal.png"
                 aDLLink.href = img;
+                aDLLink.download = "Fractal.png"
                 aDLLink.click();
                 aDLLink.remove();
             }
 
-            requestAnimationFrame(render);
+            if (state.kill)
+                updateState("kill", false);
+            else
+                requestAnimationFrame(render);
         }
         requestAnimationFrame(render);
     }, []);
 
-    return <canvas ref={canvasRef} />;
+    return <canvas ref={canvasRef} tabIndex={0}/>;
 }

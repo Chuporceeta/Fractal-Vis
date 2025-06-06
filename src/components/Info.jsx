@@ -1,7 +1,7 @@
 'use client'
 import React, {useState} from "react";
 
-export const Tooltip = ({info}) => {
+export const Info = ({info}) => {
     const [show, setShow] = useState(false);
     const [clicked, setClicked] = useState(false);
 
