@@ -1,6 +1,7 @@
 'use client'
 import {useEffect, useRef} from "react";
 import {fsSource, vsSource} from "@/shaders";
+import {addFractal} from "@/app/db";
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -181,6 +182,11 @@ export const WebGLCanvas = ({
                 aDLLink.download = "Fractal.png"
                 aDLLink.click();
                 aDLLink.remove();
+            }
+
+            if (state.upload) {
+                updateState("upload", false);
+                addFractal(state, view).then(r => console.log(r));
             }
 
             if (state.kill)

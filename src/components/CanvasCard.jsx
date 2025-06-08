@@ -3,28 +3,9 @@ import {WebGLCanvas} from "@/components/WebGLCanvas";
 import {useRouter} from "next/navigation";
 import {encode} from "@/urlEncoder";
 
-export const CanvasCard = (props) => {
-    const state = {
-        maxIter: 100,
-        rad: 2,
-        t: 0,
-        pixelToC: true,
-        iterFunc: "ccosh(pow(abs(z), 2))",
-        funcInput: "cosh(pow(abs(z), 2))",
-        cFunc: "0.7885*cis(t)",
-        xFlip: 1,
-        yFlip: 1,
-    };
+export const CanvasCard = ({state, view}) => {
     const stateRef = {
         current: state
-    }
-
-    const view = {
-        zoom: 1.0,
-        xPanOffset: 15,
-        yPanOffset: 0,
-        xZoomOffset: 0,
-        yZoomOffset: 0,
     }
 
     const router = useRouter();

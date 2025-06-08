@@ -7,7 +7,7 @@ import Link from "next/link";
 import {iAddToGallery, iDownload, iGallery} from "@/components/icons";
 
 `TODO:
- - Whole database portion
+ - Fix wrong view when loading with diff dims
  - Download settings (dimensions, video)
  - Fix coloring
  - Coloring settings
@@ -30,6 +30,7 @@ export default function Viewer({initState, view}) {
     yFlip: initState?.yFlip ?? 1,
     grid: false,
     download: false,
+    upload: false,
     kill: false,
   });
   const stateRef = useRef(state);
@@ -50,7 +51,8 @@ export default function Viewer({initState, view}) {
               {iGallery}
             </Link>
 
-            <button className="hover:transition-transform duration-200 hover:scale-125">
+            <button onClick={() => updateState('upload', true)}
+                className="hover:transition-transform duration-200 hover:scale-125">
               {iAddToGallery}
             </button>
 
