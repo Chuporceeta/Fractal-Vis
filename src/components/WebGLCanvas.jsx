@@ -137,13 +137,14 @@ export const WebGLCanvas = ({
         })
         canvas.addEventListener("mousemove", (e) => {
             if (e.buttons === 1 || e.buttons === 4) {
-                view.xPanOffset += e.movementX;
-                view.yPanOffset -= e.movementY;
+                const smallerDim = Math.min(canvas.width, canvas.height);
+                view.xPanOffset += e.movementX / smallerDim;
+                view.yPanOffset -= e.movementY / smallerDim;
             }
             if (stateRef.current.mouseC) {
                 const biggerDim = Math.max(canvas.width, canvas.height);
-                const cx = ((e.offsetX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom + view.xZoomOffset;
-                const cy = ((canvas.height - e.offsetY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom + view.yZoomOffset;
+                const cx = 4 * ((e.offsetX / canvas.width - 0.5) * biggerDim / canvas.height - view.xPanOffset) / view.zoom + view.xZoomOffset;
+                const cy = 4 * (((canvas.height - e.offsetY) / canvas.height - 0.5) * biggerDim / canvas.width - view.yPanOffset) / view.zoom + view.yZoomOffset;
                 updateState("cFunc", `${cx.toFixed(4)} ${cy<0 ? '-':'+'} ${Math.abs(cy).toFixed(4)}i`);
             }
         });
@@ -156,8 +157,8 @@ export const WebGLCanvas = ({
             const biggerDim = Math.max(canvas.width, canvas.height);
 
             const zoomPt = {
-                x: ((e.offsetX - view.xPanOffset) / canvas.width * 4 - 2) * biggerDim / canvas.height / view.zoom,
-                y: ((canvas.height - e.offsetY - view.yPanOffset) / canvas.height * 4 - 2) * biggerDim / canvas.width / view.zoom,
+                x: 4 * ((e.offsetX / canvas.width - 0.5) * biggerDim / canvas.height - view.xPanOffset) / view.zoom,
+                y: 4 * (((canvas.height - e.offsetY) / canvas.height - 0.5) * biggerDim / canvas.width - view.yPanOffset) / view.zoom,
             }
 
             view.xZoomOffset += zoomPt.x * (1 - 1 / factor);
