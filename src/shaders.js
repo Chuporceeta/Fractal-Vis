@@ -114,13 +114,13 @@ export const fsSource = (iterFunc) => `
     
     
     void main() {
-        vec2 z, c;
+        vec2 z, c = 4.0 * ((gl_FragCoord.xy / uDims - 0.5) * max(uDims.x, uDims.y) / uDims.yx - uPanOffset) / uZoom + uZoomOffset;
         if (uPixelToC) {
             z = vec2(0, 0);
-            c = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
             c *= uFlip;
         } else {
-            z = ((gl_FragCoord.xy - uPanOffset) / uDims * 4.0 - 2.0) * max(uDims.x, uDims.y) / uDims.yx / uZoom + uZoomOffset;
+            z = c;
+
             c = uC;
             z *= uFlip;
         }

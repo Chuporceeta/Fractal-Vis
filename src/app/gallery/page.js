@@ -2,7 +2,7 @@ import {CanvasCard} from "@/components/CanvasCard";
 import {fetchFractals} from "@/app/db";
 
 export default async function Gallery() {
-    const data = await fetchFractals(10);
+    const data = await fetchFractals(20);
 
     return (
         <div className="grid grid-cols-5">
