@@ -1,6 +1,7 @@
 import React from "react";
 import {Info} from "@/components/Info";
 import {iCursorFilled, iCursorOutline} from "@/components/icons";
+import {CheckboxInput, Header, NumInput} from "@/components/miniComponents";
 
 function handleFuncInput(func, updateState) {
     updateState("funcInput", func);
@@ -16,17 +17,18 @@ function handleFuncInput(func, updateState) {
 export const Sidebar = ({state, updateState}) => {
     return (
         <div className="w-64 h-full bg-white shadow-lg p-4 flex flex-col gap-6">
-            <h2 className="text-xl font-semibold border-b pb-2">Parameters</h2>
+            <Header>Parameters</Header>
 
             {/* Iterated Function */}
             <div className="flex flex-col">
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium mb-1">Iterated Function</label>
+                    <label className="text-sm font-medium mb-1" htmlFor="iterFunc">Iterated Function</label>
                     <Info info='iterFunc'/>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="font-math"> f(z) = </span>
                     <input
+                        id="iterFunc"
                         type="text"
                         value={state.funcInput}
                         onChange={(e) => handleFuncInput(e.target.value, updateState)}
@@ -37,29 +39,14 @@ export const Sidebar = ({state, updateState}) => {
             </div>
 
             {/* Max Iterations */}
-            <div className="flex flex-col">
-                <label className="text-sm font-medium mb-1">Max Iteration Number</label>
-                <input
-                    type="number"
-                    min={1}
-                    max={10000}
-                    value={state.maxIter}
-                    onChange={(e) => updateState("maxIter", Number(e.target.value))}
-                    className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
+            <NumInput value={state.maxIter} onChange={(e) => updateState("maxIter", Number(e.target.value))} min={1} max={10000}>
+                Max Iteration Number
+            </NumInput>
 
             {/* Escape Radius */}
-            <div className="flex flex-col">
-                <label className="text-sm font-medium mb-1">Escape Radius</label>
-                <input
-                    type="number"
-                    min={0}
-                    value={state.rad}
-                    onChange={(e) => updateState("rad", Number(e.target.value))}
-                    className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
+            <NumInput value={state.rad} onChange={(e) => updateState("rad", Number(e.target.value))} min={0}>
+                Escape Radius
+            </NumInput>
 
             {/* Pixel Mapping */}
             <div className="flex flex-col">
@@ -106,33 +93,18 @@ export const Sidebar = ({state, updateState}) => {
                 </div>
             }
 
-            <h2 className="text-xl font-semibold border-b">Visuals</h2>
+            <Header>Visuals</Header>
             {/* Flipping */}
             <div className="flex flex-col">
-                <div className="flex items-center justify-between">
+                <CheckboxInput value={state.xFlip} onChange={() => updateState("xFlip", -state.xFlip)}>
                     Flip Horizontally
-                    <input
-                        type="checkbox"
-                        value={state.xFlip}
-                        onChange={() => updateState("xFlip", -state.xFlip)}
-                    />
-                </div>
-                <div className="flex items-center justify-between">
+                </CheckboxInput>
+                <CheckboxInput value={state.yFlip} onChange={() => updateState("yFlip", -state.yFlip)}>
                     Flip Vertically
-                    <input
-                        type="checkbox"
-                        value={state.yFlip}
-                        onChange={() => updateState("yFlip", -state.yFlip)}
-                    />
-                </div>
-                <div className="flex items-center justify-between">
+                </CheckboxInput>
+                <CheckboxInput value={state.grid} onChange={() => updateState("grid", !state.grid)}>
                     Show Grid
-                    <input
-                        type="checkbox"
-                        value={state.grid}
-                        onChange={() => updateState("grid", !state.grid)}
-                    />
-                </div>
+                </CheckboxInput>
             </div>
 
         </div>

@@ -7,7 +7,7 @@ import Link from "next/link";
 import {iAddToGallery, iDownload, iGallery} from "@/components/icons";
 
 `TODO:
- - Fix wrong view when loading with diff dims
+ - Upload preview
  - Download settings (dimensions, video)
  - Fix coloring
  - Coloring settings
@@ -46,7 +46,7 @@ export default function Viewer({initState, view}) {
 
         <div className="flex-1 min-w-0 relative">
           <div className="absolute top-4 right-4 flex flex-col gap-4 z-10">
-            <Link href="/gallery" onClick={() => updateState('kill', true)}
+            <Link href="/gallery?p2c=true&p2z=true&query=" onClick={() => updateState('kill', true)}
                   className="hover:transition-transform duration-200 hover:scale-125">
               {iGallery}
             </Link>
