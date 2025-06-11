@@ -22,6 +22,7 @@ export async function fetchFractals(limit, query, filters) {
             SELECT * FROM fractals
             WHERE func_input LIKE ${`%${query}%`}
             AND ${filters.p2c === filters.p2z ? (filters.p2c === "true") : sql`pixel_to_c = ${filters.p2c === "true"}`}
+            ORDER BY likes DESC
             LIMIT ${limit}
         `;
 
@@ -29,6 +30,7 @@ export async function fetchFractals(limit, query, filters) {
         for (const fractal of data) {
             fractals.push({
                 key: fractal.id,
+                likes: fractal.likes,
                 state: {
                     maxIter: fractal.max_iter,
                     rad: fractal.rad,

@@ -47,17 +47,17 @@ export default function Viewer({initState, view}) {
         <div className="flex-1 min-w-0 relative">
           <div className="absolute top-4 right-4 flex flex-col gap-4 z-10">
             <Link href="/gallery?p2c=true&p2z=true&query=" onClick={() => updateState('kill', true)}
-                  className="hover:transition-transform duration-200 hover:scale-125">
+                  className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
               {iGallery}
             </Link>
 
             <button onClick={() => updateState('upload', true)}
-                className="hover:transition-transform duration-200 hover:scale-125">
+                className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
               {iAddToGallery}
             </button>
 
             <button onClick={() => updateState('download', true)}
-                    className="hover:transition-transform duration-200 hover:scale-125">
+                    className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
               {iDownload}
             </button>
           </div>
