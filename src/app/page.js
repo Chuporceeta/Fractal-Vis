@@ -51,7 +51,9 @@ export default function Viewer({initState, view}) {
               {iGallery}
             </Link>
 
-            <button onClick={() => updateState('upload', true)}
+            <button onClick={() => {
+              updateState('upload', true);
+            }}
                 className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
               {iAddToGallery}
             </button>

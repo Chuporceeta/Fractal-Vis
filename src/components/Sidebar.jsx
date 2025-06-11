@@ -96,10 +96,10 @@ export const Sidebar = ({state, updateState}) => {
             <Header>Visuals</Header>
             {/* Flipping */}
             <div className="flex flex-col">
-                <CheckboxInput value={state.xFlip} onChange={() => updateState("xFlip", -state.xFlip)}>
+                <CheckboxInput value={state.xFlip} onChange={() => updateState("xFlip", -state.xFlip)} checked={state.xFlip===-1}>
                     Flip Horizontally
                 </CheckboxInput>
-                <CheckboxInput value={state.yFlip} onChange={() => updateState("yFlip", -state.yFlip)}>
+                <CheckboxInput value={state.yFlip} onChange={() => updateState("yFlip", -state.yFlip)} checked={state.yFlip===-1}>
                     Flip Vertically
                 </CheckboxInput>
                 <CheckboxInput value={state.grid} onChange={() => updateState("grid", !state.grid)}>
