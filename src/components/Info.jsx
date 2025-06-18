@@ -1,5 +1,5 @@
 'use client'
-import React, {useState} from "react";
+import {useState} from "react";
 import {iInfo} from "@/components/icons";
 
 export const Info = ({info}) => {

@@ -1,4 +1,3 @@
-import React from "react";
 import {Info} from "@/components/Info";
 import {iCursorFilled, iCursorOutline} from "@/components/icons";
 import {CheckboxInput, Header, NumInput} from "@/components/miniComponents";

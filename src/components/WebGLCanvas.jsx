@@ -2,6 +2,7 @@
 import {useEffect, useRef} from "react";
 import {fsSource, vsSource} from "@/shaders";
 import {addFractal} from "@/app/db";
+import {currentUser} from "@/components/Login";
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -17,8 +18,10 @@ function loadShader(gl, type, source) {
 }
 
 function draw(gl, programInfo, canvas, view, settings) {
-    canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
+    canvas.width = canvas.parentElement.clientWidth;
+    if (settings.upload === 1)
+        canvas.width = canvas.height = Math.min(canvas.width, canvas.height);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     const match = settings.cFunc.match(/^(-?\d+(?:\.\d+)?) ?([+-] ?\d+(?:\.\d+)?)i$|^(-?\d+(?:\.\d+)?)?\*?cis\(?t\)?$/);
@@ -185,9 +188,9 @@ export const WebGLCanvas = ({
                 aDLLink.remove();
             }
 
-            if (state.upload) {
-                updateState("upload", false);
-                addFractal(state, view).then(r => console.log(r));
+            if (state.upload === 2) {
+                updateState("upload", 0);
+                addFractal(state, view, currentUser).then(r => console.log(r));
             }
 
             if (state.kill)

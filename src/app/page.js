@@ -5,13 +5,7 @@ import {useRef, useState} from "react";
 import {TimeSlider} from "@/components/TimeSlider";
 import Link from "next/link";
 import {iAddToGallery, iDownload, iGallery} from "@/components/icons";
-
-`TODO:
- - Upload preview
- - Download settings (dimensions, video)
- - Fix coloring
- - Coloring settings
-`
+import UploadModal from "@/components/UploadModal";
 
 export default function Viewer({initState, view}) {
   const [state, setState] = useState({
@@ -30,7 +24,7 @@ export default function Viewer({initState, view}) {
     yFlip: initState?.yFlip ?? 1,
     grid: false,
     download: false,
-    upload: false,
+    upload: 0,
     kill: false,
   });
   const stateRef = useRef(state);
@@ -44,19 +38,22 @@ export default function Viewer({initState, view}) {
       <div className="flex h-screen">
         <Sidebar state={state} updateState={updateState}/>
 
-        <div className="flex-1 min-w-0 relative">
+        <div className="flex-1 min-w-0 relative" id="content">
           <div className="absolute top-4 right-4 flex flex-col gap-4 z-10">
-            <Link href="/gallery?p2c=true&p2z=true&query=" onClick={() => updateState('kill', true)}
+            <Link href="/gallery" onClick={() => updateState('kill', true)}
                   className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
               {iGallery}
             </Link>
 
-            <button onClick={() => {
-              updateState('upload', true);
-            }}
-                className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
-              {iAddToGallery}
-            </button>
+            <div className="relative">
+              <button onClick={() => {
+                updateState('upload', 1-state.upload);
+              }}
+                  className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
+                {iAddToGallery}
+              </button>
+              <UploadModal isOpen={state.upload === 1} setUpload={(value) => updateState('upload', value)} />
+            </div>
 
             <button onClick={() => updateState('download', true)}
                     className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">

@@ -9,14 +9,14 @@ export default function GalleryUI({children}) {
     const searchParams = useSearchParams();
     const { replace } = useRouter();
 
-    const updateParams = (name) => {
+    const toggleParam = (name) => {
         const params = new URLSearchParams(searchParams);
         params.set(name, params.get(name)==='true' ? 'false' : 'true');
         replace(`/gallery/?${params.toString()}`);
     }
 
     return (
-        <Form className="flex h-screen" action="/gallery">
+        <Form className="flex h-screen bg-gray-50" action="/gallery">
             {/* Sidebar */}
             <aside className="w-64 bg-gray-100 p-4 border-r overflow-y-auto">
                 <Link href="/" className="mb-4 text-blue-600 hover:underline block">
@@ -24,13 +24,18 @@ export default function GalleryUI({children}) {
                 </Link>
                 <Header>Filters</Header>
                 <div>
-                    <CheckboxInput value={searchParams.get('p2c')} onChange={() => {updateParams('p2c')}} name="p2c" checked>
+                    <CheckboxInput value={searchParams.get('p2c')??true} onChange={() => toggleParam('p2c')} name="p2c" checked>
                         Pixels mapped to <span className="font-math italic"> c </span>
                     </CheckboxInput>
-                    <CheckboxInput value={searchParams.get('p2z')} onChange={() => {updateParams('p2z')}} name="p2z" checked>
+                    <CheckboxInput value={searchParams.get('p2z')??true} onChange={() => toggleParam('p2z')} name="p2z" checked>
                         Pixels mapped to <span className="font-math italic"> z </span>
                     </CheckboxInput>
-
+                    <CheckboxInput value={searchParams.get('mine')??false} onChange={() => toggleParam('mine')} name="mine">
+                        My Uploads
+                    </CheckboxInput>
+                    <CheckboxInput value={searchParams.get('liked')??false} onChange={() => toggleParam('liked')} name="liked">
+                        Liked
+                    </CheckboxInput>
                 </div>
             </aside>
 

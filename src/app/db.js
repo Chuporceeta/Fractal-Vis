@@ -1,14 +1,15 @@
 'use server'
 import postgres from "postgres";
+import bcrypt from "bcrypt";
 
 const sql = postgres(process.env.POSTGRES_URL, { ssl: 'require' });
 
-export async function addFractal(state, view) {
+export async function addFractal(state, view, username) {
     try {
         await sql`
-            INSERT INTO fractals (max_iter, rad, t, pixel_to_c, iter_func, func_input, c_func, x_flip, y_flip, view)
+            INSERT INTO fractals (max_iter, rad, t, pixel_to_c, iter_func, func_input, c_func, x_flip, y_flip, view, creator)
             VALUES (${state.maxIter}, ${state.rad}, ${state.t}, ${state.pixelToC}, ${state.iterFunc}, ${state.funcInput},
-                    ${state.cFunc}, ${state.xFlip===-1}, ${state.yFlip===-1}, ${view})
+                    ${state.cFunc}, ${state.xFlip===-1}, ${state.yFlip===-1}, ${view}, ${username})
         `;
         return 'success';
     } catch (error) {
@@ -17,6 +18,7 @@ export async function addFractal(state, view) {
 }
 
 export async function fetchFractals(limit, query, filters) {
+    console.log(query, filters);
     try {
         const data = await sql`
             SELECT * FROM fractals
@@ -50,4 +52,32 @@ export async function fetchFractals(limit, query, filters) {
         console.log(error);
         return [];
     }
+}
+
+export async function handleLogin(username, password) {
+    let res = "";
+    try {
+        const [result] = await sql`
+            SELECT pass_hash FROM users
+            WHERE username = ${username}
+        `;
+        if (result === undefined) {
+            const hash = await bcrypt.hash(password, 10);
+            await sql`
+                INSERT INTO users (username, pass_hash)
+                VALUES (${username}, ${hash})
+            `;
+            res = {success: true, msg: "Successfully created account"};
+        } else {
+            const match = await bcrypt.compare(password, result.pass_hash);
+            if (match === true) {
+                res = {success: true, msg: "Successfully logged in"};
+            } else
+                res = {success: false, msg: "Incorrect username/password."};
+        }
+    } catch (error) {
+        console.log(error);
+        res = {success: false, msg: "Failed to log in"};
+    }
+    return res;
 }
