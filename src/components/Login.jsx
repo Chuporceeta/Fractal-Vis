@@ -1,12 +1,11 @@
 'use client'
-import {handleLogin} from "@/app/db";
-import {useState} from "react";
-
-export let currentUser = null;
+import {getCurrentUser, handleLogin, logOut} from "@/app/db";
+import {useEffect, useState} from "react";
 
 export default function Login({onCancel, onLogin, submitText="Login"}) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [currentUser, setCurrentUser] = useState(null);
 
     const handleCancel = () => {
         setUsername('');
@@ -15,6 +14,12 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
     };
 
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        getCurrentUser().then((user) => {
+            setCurrentUser(user);
+        });
+    }, []);
 
     const buttons = (
         <div className="flex justify-between mb-2">
@@ -32,7 +37,7 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
                     } else {
                         handleLogin(username, password).then(result => {
                             if (result.success) {
-                                currentUser = username;
+                                setCurrentUser(username);
                                 onLogin();
                             } else {
                                 setError(result.msg);
@@ -46,10 +51,17 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
         </div>
     );
 
+
     if (currentUser !== null) {
         return (
             <div>
-                <span className="mb-4 block">Logged in as {currentUser}</span>
+                <div className="flex justify-between mb-4">
+                    <span>Logged in as {currentUser}</span>
+                    <button className="text-blue-600 hover:underline" onClick={()=> {
+                        setCurrentUser(null);
+                        logOut();
+                    }}>Logout</button>
+                </div>
                 {buttons}
             </div>
         );

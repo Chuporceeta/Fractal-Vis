@@ -2,7 +2,6 @@
 import {useEffect, useRef} from "react";
 import {fsSource, vsSource} from "@/shaders";
 import {addFractal} from "@/app/db";
-import {currentUser} from "@/components/Login";
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -190,7 +189,7 @@ export const WebGLCanvas = ({
 
             if (state.upload === 2) {
                 updateState("upload", 0);
-                addFractal(state, view, currentUser).then(r => console.log(r));
+                addFractal(state, view).then(r => console.log(r));
             }
 
             if (state.kill)

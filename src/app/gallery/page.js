@@ -1,5 +1,5 @@
 import {CanvasCard} from "@/components/CanvasCard";
-import {fetchFractals} from "@/app/db";
+import {fetchFractals, getCurrentUser} from "@/app/db";
 import React from "react";
 import GalleryUI from "@/app/gallery/GalleryUI";
 
@@ -18,8 +18,9 @@ export default async function Gallery({searchParams}) {
         filters[key] = filters[key] ?? value;
 
     const data = await fetchFractals(20, query, filters);
+    const loggedIn = (await getCurrentUser()) !== null;
     return (
-        <GalleryUI>
+        <GalleryUI loggedIn={loggedIn}>
             {data.map((fractal) => (
                 <CanvasCard key={fractal.key} likes={fractal.likes} state={fractal.state} view={fractal.view}/>
             ))}

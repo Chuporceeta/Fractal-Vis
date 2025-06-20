@@ -1,11 +1,30 @@
 'use server'
 import postgres from "postgres";
 import bcrypt from "bcrypt";
+import {cookies} from "next/headers";
+import jwt from "jsonwebtoken";
 
 const sql = postgres(process.env.POSTGRES_URL, { ssl: 'require' });
 
-export async function addFractal(state, view, username) {
+export async function getCurrentUser() {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('jwt').value;
+        const {username} = jwt.verify(token, process.env.JWT_SECRET);
+        return username;
+    } catch {
+        return null;
+    }
+}
+
+export async function logOut() {
+    const cookieStore = await cookies();
+    cookieStore.delete('jwt');
+}
+
+export async function addFractal(state, view) {
+    try {
+        const username = await getCurrentUser();
         await sql`
             INSERT INTO fractals (max_iter, rad, t, pixel_to_c, iter_func, func_input, c_func, x_flip, y_flip, view, creator)
             VALUES (${state.maxIter}, ${state.rad}, ${state.t}, ${state.pixelToC}, ${state.iterFunc}, ${state.funcInput},
@@ -18,12 +37,14 @@ export async function addFractal(state, view, username) {
 }
 
 export async function fetchFractals(limit, query, filters) {
-    console.log(query, filters);
     try {
+        const username = await getCurrentUser();
+
         const data = await sql`
             SELECT * FROM fractals
             WHERE func_input LIKE ${`%${query}%`}
             AND ${filters.p2c === filters.p2z ? (filters.p2c === "true") : sql`pixel_to_c = ${filters.p2c === "true"}`}
+            ${filters.mine === 'true' ? sql`AND creator = ${username}` : sql``}
             ORDER BY likes DESC
             LIMIT ${limit}
         `;
@@ -49,13 +70,16 @@ export async function fetchFractals(limit, query, filters) {
         }
         return fractals;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return [];
     }
 }
 
 export async function handleLogin(username, password) {
-    let res = "";
+    if (username in ['null', 'undefined',]) {
+        return {success: false, msg: 'Illegal username.'}
+    }
+    let res;
     try {
         const [result] = await sql`
             SELECT pass_hash FROM users
@@ -76,8 +100,20 @@ export async function handleLogin(username, password) {
                 res = {success: false, msg: "Incorrect username/password."};
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res = {success: false, msg: "Failed to log in"};
     }
+
+    if (res.success) {
+        const cookieStore = await cookies();
+        const token = jwt.sign({username: username}, process.env.JWT_SECRET, {expiresIn: "7 days"});
+        cookieStore.set({
+            name: 'jwt',
+            value: token,
+            httpOnly: true,
+            maxAge: 60 * 60 * 24 * 7,
+        });
+    }
+
     return res;
 }

@@ -5,7 +5,7 @@ import {CheckboxInput, Header} from "@/components/miniComponents";
 import Form from "next/form";
 import {useRouter, useSearchParams} from "next/navigation";
 
-export default function GalleryUI({children}) {
+export default function GalleryUI({loggedIn, children}) {
     const searchParams = useSearchParams();
     const { replace } = useRouter();
 
@@ -30,12 +30,14 @@ export default function GalleryUI({children}) {
                     <CheckboxInput value={searchParams.get('p2z')??true} onChange={() => toggleParam('p2z')} name="p2z" checked>
                         Pixels mapped to <span className="font-math italic"> z </span>
                     </CheckboxInput>
-                    <CheckboxInput value={searchParams.get('mine')??false} onChange={() => toggleParam('mine')} name="mine">
-                        My Uploads
-                    </CheckboxInput>
-                    <CheckboxInput value={searchParams.get('liked')??false} onChange={() => toggleParam('liked')} name="liked">
-                        Liked
-                    </CheckboxInput>
+                    <fieldset disabled={!loggedIn} className={loggedIn ? '' : 'opacity-60'}>
+                        <CheckboxInput value={searchParams.get('mine')??false} onChange={() => toggleParam('mine')} name="mine">
+                            My Uploads
+                        </CheckboxInput>
+                        <CheckboxInput value={searchParams.get('liked')??false} onChange={() => toggleParam('liked')} name="liked">
+                            My Liked
+                        </CheckboxInput>
+                    </fieldset>
                 </div>
             </aside>
 
