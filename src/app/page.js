@@ -7,6 +7,14 @@ import Link from "next/link";
 import {iAddToGallery, iDownload, iGallery} from "@/components/icons";
 import UploadModal from "@/components/UploadModal";
 
+
+`TODO:
+ - Likes
+ - Pagination
+ - Download settings
+ - Coloring
+`
+
 export default function Viewer({initState, view}) {
   const [state, setState] = useState({
     maxIter: initState?.maxIter ?? 100,
@@ -52,7 +60,9 @@ export default function Viewer({initState, view}) {
                   className="hover:transition-transform duration-200 hover:scale-125 drop-shadow-outline">
                 {iAddToGallery}
               </button>
+
               <UploadModal isOpen={state.upload === 1} setUpload={(value) => updateState('upload', value)} />
+
             </div>
 
             <button onClick={() => updateState('download', true)}

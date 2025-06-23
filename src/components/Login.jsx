@@ -1,12 +1,12 @@
 'use client'
-import {getCurrentUser, handleLogin, logOut} from "@/app/db";
-import {useEffect, useState} from "react";
+import {handleLogin, logOut} from "@/app/db";
+import {useContext, useState} from "react";
+import {UserContext} from "@/components/userContext";
 
-export default function Login({onCancel, onLogin, submitText="Login"}) {
+export default function Login({onCancel=()=>{}, onLogin=()=>{}, onLogOut=()=>{}, submitText="Login", modal=false}) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [currentUser, setCurrentUser] = useState(null);
-
+    const {currentUser, setCurrentUser} = useContext(UserContext);
     const handleCancel = () => {
         setUsername('');
         setPassword('');
@@ -15,11 +15,22 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
 
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        getCurrentUser().then((user) => {
-            setCurrentUser(user);
-        });
-    }, []);
+    function handleSubmit(){
+        if (currentUser !== null) {
+            onLogin();
+        } else {
+            handleLogin(username, password).then(result => {
+                if (result.success) {
+                    setCurrentUser(username);
+                    setUsername('');
+                    setPassword('');
+                    onLogin();
+                } else {
+                    setError(result.msg);
+                }
+            });
+        }
+    }
 
     const buttons = (
         <div className="flex justify-between mb-2">
@@ -27,24 +38,11 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-4 py-2 rounded-lg"
                 onClick={handleCancel}
             >
-                Cancel
+                {modal ? "Cancel" : "Clear"}
             </button>
             <button
                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg"
-                onClick={() => {
-                    if (currentUser !== null) {
-                        onLogin();
-                    } else {
-                        handleLogin(username, password).then(result => {
-                            if (result.success) {
-                                setCurrentUser(username);
-                                onLogin();
-                            } else {
-                                setError(result.msg);
-                            }
-                        });
-                    }
-                }}
+                onClick={handleSubmit}
             >
                 {submitText}
             </button>
@@ -58,17 +56,24 @@ export default function Login({onCancel, onLogin, submitText="Login"}) {
                 <div className="flex justify-between mb-4">
                     <span>Logged in as {currentUser}</span>
                     <button className="text-blue-600 hover:underline" onClick={()=> {
-                        setCurrentUser(null);
-                        logOut();
+                        logOut().then(() => {
+                            setCurrentUser(null);
+                            onLogOut();
+                        });
                     }}>Logout</button>
                 </div>
-                {buttons}
+                {modal ? buttons : null}
             </div>
         );
     }
 
     return (
-        <div>
+        <div onKeyDown={(e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+            }
+        }}>
             <div className="mb-3">
                 <label className="block text-sm text-gray-600">Username</label>
                 <input
