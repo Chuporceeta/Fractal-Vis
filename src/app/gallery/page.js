@@ -21,7 +21,9 @@ export default async function Gallery({searchParams}) {
     return (
             <GalleryUI>
                 {data.map((fractal) => (
-                    <CanvasCard key={fractal.key} likes={fractal.likes} state={fractal.state} view={fractal.view}/>
+                    <CanvasCard key={fractal.id} id={fractal.id}
+                                numLikes={fractal.numLikes} userLikes={fractal.liked}
+                                state={fractal.state} view={fractal.view}/>
                 ))}
             </GalleryUI>
     );

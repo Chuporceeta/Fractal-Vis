@@ -9,7 +9,6 @@ import UploadModal from "@/components/UploadModal";
 
 
 `TODO:
- - Likes
  - Pagination
  - Download settings
  - Coloring

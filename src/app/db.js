@@ -22,9 +22,35 @@ export async function logOut() {
     cookieStore.delete('jwt');
 }
 
+export async function setFractalLike(id, liked) {
+    try {
+        const username = await getCurrentUser();
+        if (username === null) return `Error: Not signed in`;
+
+        await sql.begin(async sql => {
+            await sql`SELECT * FROM fractals WHERE id = ${id} FOR UPDATE`;
+            if (liked) {
+                await sql`INSERT INTO user_likes VALUES (${username}, ${id})`;
+            } else {
+                await sql`DELETE FROM user_likes WHERE username = ${username} AND fractal_id = ${id}`;
+            }
+            await sql`
+                UPDATE fractals
+                SET num_likes = num_likes ${liked ? sql`+` : sql`-`} 1
+                WHERE id = ${id}
+            `;
+        });
+        return 'success';
+    } catch (error) {
+        return error;
+    }
+}
+
 export async function addFractal(state, view) {
     try {
         const username = await getCurrentUser();
+        if (username === null) return `Error: Not signed in`;
+
         await sql`
             INSERT INTO fractals (max_iter, rad, t, pixel_to_c, iter_func, func_input, c_func, x_flip, y_flip, view, creator)
             VALUES (${state.maxIter}, ${state.rad}, ${state.t}, ${state.pixelToC}, ${state.iterFunc}, ${state.funcInput},
@@ -41,19 +67,25 @@ export async function fetchFractals(limit, query, filters) {
         const username = await getCurrentUser();
 
         const data = await sql`
-            SELECT * FROM fractals
+            SELECT 
+                fractals.*,
+                CASE WHEN user_likes.username = ${username} THEN TRUE ELSE FALSE END AS liked
+            FROM fractals
+            LEFT JOIN user_likes ON fractals.id = user_likes.fractal_id
             WHERE func_input LIKE ${`%${query}%`}
-            AND ${filters.p2c === filters.p2z ? (filters.p2c === "true") : sql`pixel_to_c = ${filters.p2c === "true"}`}
-            ${filters.mine === 'true' ? sql`AND creator = ${username}` : sql``}
-            ORDER BY likes DESC
+                AND ${filters.p2c === filters.p2z ? (filters.p2c === "true") : sql`pixel_to_c = ${filters.p2c === "true"}`}
+                ${filters.mine === 'true' ? sql`AND creator = ${username}` : sql``}
+                ${filters.liked === 'true' ? sql`AND user_likes.username = ${username}` : sql``}
+            ORDER BY num_likes DESC
             LIMIT ${limit}
         `;
 
         let fractals = [];
         for (const fractal of data) {
             fractals.push({
-                key: fractal.id,
-                likes: fractal.likes,
+                id: fractal.id,
+                numLikes: fractal.num_likes,
+                liked: fractal.liked,
                 state: {
                     maxIter: fractal.max_iter,
                     rad: fractal.rad,

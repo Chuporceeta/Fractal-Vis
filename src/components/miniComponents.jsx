@@ -1,6 +1,3 @@
-import React, {useContext, useState} from "react";
-import {UserContext} from "@/components/userContext";
-
 export const Header = ({children}) => {
     return <h2 className="text-xl font-semibold border-b pb-2">{children}</h2>;
 }
