@@ -108,9 +108,17 @@ export async function fetchFractals(limit, query, filters) {
 }
 
 export async function handleLogin(username, password) {
-    if (username in ['null', 'undefined',]) {
-        return {success: false, msg: 'Illegal username.'}
+    if (username in ['null', 'undefined', '']) {
+        return {success: false, msg: 'Illegal username.'};
     }
+    if (/[\w-!@#$%^&*]*/.test(password)) {
+        return {success: false, msg: 'Password may only contain alphanumeric characters or _-!@#$%^&*.'};
+    }
+    if (password.length < 8 || password.length > 72) {
+        return {success: false, msg: 'Password must be between 8 and 72 characters inclusive.'};
+    }
+
+
     let res;
     try {
         const [result] = await sql`
@@ -123,17 +131,17 @@ export async function handleLogin(username, password) {
                 INSERT INTO users (username, pass_hash)
                 VALUES (${username}, ${hash})
             `;
-            res = {success: true, msg: "Successfully created account"};
+            res = {success: true, msg: "Successfully created account."};
         } else {
             const match = await bcrypt.compare(password, result.pass_hash);
             if (match === true) {
-                res = {success: true, msg: "Successfully logged in"};
+                res = {success: true, msg: "Successfully logged in."};
             } else
                 res = {success: false, msg: "Incorrect username/password."};
         }
     } catch (error) {
         console.error(error);
-        res = {success: false, msg: "Failed to log in"};
+        res = {success: false, msg: "Failed to log in."};
     }
 
     if (res.success) {
@@ -143,6 +151,7 @@ export async function handleLogin(username, password) {
             name: 'jwt',
             value: token,
             httpOnly: true,
+            secure: true,
             maxAge: 60 * 60 * 24 * 7,
         });
     }
