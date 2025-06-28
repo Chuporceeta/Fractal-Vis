@@ -32,6 +32,12 @@ export const CanvasCard = ({id, numLikes, userLikes, state, view}) => {
         return () => clearTimeout(timeout);
     }, [liked]);
 
+    useEffect(() => {
+        setLikes(numLikes);
+        setLiked(userLikes);
+        setDebouncedLiked(userLikes);
+    }, [userLikes, numLikes]);
+
     return (
         <div className="w-48 h-48 m-2 relative hover:transition-transform duration-200 hover:scale-110"
              onClick={async () => {
