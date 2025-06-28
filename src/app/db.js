@@ -108,15 +108,15 @@ export async function fetchFractals(limit, query, filters) {
 }
 
 export async function handleLogin(username, password) {
-    if (username in ['null', 'undefined', '']) {
+    if (username in ['null', 'undefined'])
         return {success: false, msg: 'Illegal username.'};
-    }
-    if (/[\w-!@#$%^&*]*/.test(password)) {
+    if (username.length < 4)
+        return {success: false, msg: 'Username must be at least 4 characters long.'};
+
+    if (/[\w-!@#$%^&*]*/.test(password) !== true)
         return {success: false, msg: 'Password may only contain alphanumeric characters or _-!@#$%^&*.'};
-    }
-    if (password.length < 8 || password.length > 72) {
+    if (password.length < 8 || password.length > 72)
         return {success: false, msg: 'Password must be between 8 and 72 characters inclusive.'};
-    }
 
 
     let res;
