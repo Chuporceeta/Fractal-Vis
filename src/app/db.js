@@ -71,7 +71,9 @@ export async function fetchFractals(limit, query, filters) {
                 fractals.*,
                 CASE WHEN user_likes.username = ${username} THEN TRUE ELSE FALSE END AS liked
             FROM fractals
-            LEFT JOIN user_likes ON fractals.id = user_likes.fractal_id
+            LEFT JOIN user_likes
+                ON fractals.id = user_likes.fractal_id
+                AND user_likes.username = ${username}
             WHERE func_input LIKE ${`%${query}%`}
                 AND ${filters.p2c === filters.p2z ? (filters.p2c === "true") : sql`pixel_to_c = ${filters.p2c === "true"}`}
                 ${filters.mine === 'true' ? sql`AND creator = ${username}` : sql``}
