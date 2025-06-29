@@ -39,7 +39,7 @@ export const CanvasCard = ({id, numLikes, userLikes, state, view}) => {
     }, [userLikes, numLikes]);
 
     return (
-        <div className="w-48 h-48 m-2 relative hover:transition-transform duration-200 hover:scale-110"
+        <div className="w-48 h-48 relative hover:transition-transform duration-200 hover:scale-110"
              onClick={async () => {
                  const enc = await encode(state, view);
                  router.push(`/${enc}`)

@@ -72,7 +72,7 @@ export default function GalleryUI({children}) {
                 </div>
 
                 {/* Image Grid */}
-                <div className="flex-1 overflow-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="p-4 overflow-scroll grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
                     <Suspense>
                         {children}
                     </Suspense>
