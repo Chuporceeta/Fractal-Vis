@@ -62,14 +62,17 @@ export async function addFractal(state, view) {
     }
 }
 
-export async function fetchFractals(limit, query, filters) {
+export async function fetchFractals(pageSize, page, query, filters) {
+    if (pageSize < 1)
+        return {count: 0, data: []};
     try {
         const username = await getCurrentUser();
 
         const data = await sql`
             SELECT 
                 fractals.*,
-                CASE WHEN user_likes.username = ${username} THEN TRUE ELSE FALSE END AS liked
+                CASE WHEN user_likes.username = ${username} THEN TRUE ELSE FALSE END AS liked,
+                COUNT(*) OVER() as total_count
             FROM fractals
             LEFT JOIN user_likes
                 ON fractals.id = user_likes.fractal_id
@@ -79,7 +82,7 @@ export async function fetchFractals(limit, query, filters) {
                 ${filters.mine === 'true' ? sql`AND creator = ${username}` : sql``}
                 ${filters.liked === 'true' ? sql`AND user_likes.username = ${username}` : sql``}
             ORDER BY num_likes DESC
-            LIMIT ${limit}
+            LIMIT ${pageSize} OFFSET ${pageSize*(page-1)}
         `;
 
         let fractals = [];
@@ -102,10 +105,10 @@ export async function fetchFractals(limit, query, filters) {
                 view: fractal.view,
             });
         }
-        return fractals;
+        return {count: data[0].total_count, data: fractals};
     } catch (error) {
         console.error(error);
-        return [];
+        return {count: 0, data: []};
     }
 }
 

@@ -10,16 +10,22 @@ export const defaultFilters = {
 }
 
 export default async function Gallery({searchParams}) {
-    let {query, ...filters} = await searchParams;
+    const params = await searchParams;
+    if (Object.keys(params).length === 0)
+        return <GalleryUI count={-1}/>;
 
-    query = query ?? "";
+    let {query, page, rpp, cols, ...filters} = params;
+    query ??= "";
+    page ??= 1;
+    rpp ??= 5;
+    cols ??= 0;
 
     for (const [key, value] of Object.entries(defaultFilters))
         filters[key] = filters[key] ?? value;
 
-    const data = await fetchFractals(20, query, filters);
+    const {count, data} = await fetchFractals(rpp*cols, page, query, filters);
     return (
-            <GalleryUI>
+            <GalleryUI count={count} page={page} rowsPerPage={rpp} numCols={cols}>
                 {data.map((fractal) => (
                     <CanvasCard key={fractal.id} id={fractal.id}
                                 numLikes={fractal.numLikes} userLikes={fractal.liked}
