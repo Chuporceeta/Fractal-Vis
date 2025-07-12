@@ -49,7 +49,7 @@ export const CanvasCard = ({id, numLikes, userLikes, state, view}) => {
             <div className="absolute top-0 left-0 w-full h-full opacity-0 hover:opacity-100 hover:bg-gray-600/50">
                 <div className="absolute top-2 left-2 drop-shadow-outline flex items-end gap-1">
                     <button disabled={currentUser === null}
-                        className={currentUser === null ? "opacity-60" : "hover:transition-transform duration-100 hover:scale-110"}
+                        className={currentUser === null ? "opacity-60" : "hover:transition-transform duration-100 hover:scale-110 cursor-pointer"}
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleLike();
